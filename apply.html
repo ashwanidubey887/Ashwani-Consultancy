@@ -1,0 +1,38 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Apply for Job</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="firebase-config.js"></script>
+</head>
+<body>
+  <header>Apply for Job</header>
+  <div class="form-container">
+    <input type="text" id="name" placeholder="Your Name"><br>
+    <input type="email" id="email" placeholder="Your Email"><br>
+    <textarea id="message" placeholder="Your Message"></textarea><br>
+    <button onclick="apply()">Submit Application</button>
+    <p id="status"></p>
+  </div>
+  <script>
+    function apply() {
+      const data = {
+        name: document.getElementById('name').value,
+        email: document.getElementById('email').value,
+        message: document.getElementById('message').value,
+        submittedAt: new Date()
+      };
+      db.collection("applications").add(data).then(() => {
+        document.getElementById('status').innerText = "Application submitted!";
+      }).catch(err => {
+        console.error(err);
+        document.getElementById('status').innerText = "Error submitting application.";
+      });
+    }
+  </script>
+</body>
+</html>

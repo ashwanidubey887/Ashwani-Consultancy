@@ -1,0 +1,48 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Post Job - Admin</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="firebase-config.js"></script>
+</head>
+<body>
+  <header>Admin Panel</header>
+  <div class="form-container">
+    <h2>Post a New Job</h2>
+    <input type="password" id="adminPass" placeholder="Enter Admin Password"><br>
+    <input type="text" id="title" placeholder="Job Title"><br>
+    <input type="text" id="company" placeholder="Company"><br>
+    <input type="text" id="location" placeholder="Location"><br>
+    <input type="text" id="salary" placeholder="Salary"><br>
+    <button onclick="postJob()">Post Job</button>
+    <p id="status"></p>
+  </div>
+  <script>
+    function postJob() {
+      const pass = document.getElementById('adminPass').value;
+      if (pass !== "ashwani123") {
+        alert("Incorrect password!");
+        return;
+      }
+
+      const job = {
+        title: document.getElementById('title').value,
+        company: document.getElementById('company').value,
+        location: document.getElementById('location').value,
+        salary: document.getElementById('salary').value
+      };
+
+      db.collection("jobs").add(job).then(() => {
+        document.getElementById('status').innerText = "Job posted successfully!";
+      }).catch(err => {
+        console.error(err);
+        document.getElementById('status').innerText = "Error posting job.";
+      });
+    }
+  </script>
+</body>
+</html>
