@@ -1,29 +1,250 @@
-
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
+  <title>Ashwani Consultancy - Admin & Job Seeker</title>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ashwani Consultancy</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script src="firebase-config.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      getDocs,
+      addDoc,
+      doc,
+      updateDoc,
+      query,
+      orderBy,
+    } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCP4_qBhYaGWcOvhYsp7UwTGYQlW5GUW1c",
+      authDomain: "ashwani-consultancy-8d7ee.firebaseapp.com",
+      projectId: "ashwani-consultancy-8d7ee",
+      storageBucket: "ashwani-consultancy-8d7ee.firebasestorage.app",
+      messagingSenderId: "790517747579",
+      appId: "1:790517747579:web:58912ae273c1f12f3cb7de",
+      measurementId: "G-3HYDXMJ57S",
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    let isAuthenticated = false;
+
+    window.login = async function () {
+      const pw = document.getElementById("adminPassword").value;
+      if (pw !== "admin123") {
+        alert("Incorrect password.");
+        return;
+      }
+      isAuthenticated = true;
+      document.getElementById("loginSection").style.display = "none";
+      document.getElementById("mainSection").style.display = "block";
+      await loadJobs();
+      await loadApplications();
+    };
+
+    async function loadJobs() {
+      const jobsCol = collection(db, "jobs");
+      const jobSnap = await getDocs(jobsCol);
+      const jobList = document.getElementById("jobList");
+      jobList.innerHTML = "";
+
+      jobSnap.forEach((docSnap) => {
+        const data = docSnap.data();
+        const jobId = docSnap.id;
+
+        const row = document.createElement("div");
+        row.className = "job-card";
+        row.innerHTML = `
+          <input value="${data.jobTitle}" id="title-${jobId}" placeholder="Job Title" />
+          <input value="${data.company}" id="company-${jobId}" placeholder="Company" />
+          <input value="${data.location}" id="location-${jobId}" placeholder="Location" />
+          <input value="${data.salary}" id="salary-${jobId}" placeholder="Salary" />
+          <button onclick="updateJob('${jobId}')">Save</button>
+        `;
+        jobList.appendChild(row);
+      });
+    }
+
+    window.updateJob = async function (id) {
+      const jobRef = doc(db, "jobs", id);
+      const newData = {
+        jobTitle: document.getElementById(`title-${id}`).value,
+        company: document.getElementById(`company-${id}`).value,
+        location: document.getElementById(`location-${id}`).value,
+        salary: document.getElementById(`salary-${id}`).value,
+      };
+
+      try {
+        await updateDoc(jobRef, newData);
+        alert("Job updated successfully.");
+      } catch (e) {
+        alert("Error updating job: " + e.message);
+      }
+    };
+
+    async function loadApplications() {
+      const appsCol = collection(db, "applications");
+      const q = query(appsCol, orderBy("submittedAt", "desc"));
+      const appSnap = await getDocs(q);
+      const appList = document.getElementById("applicationList");
+      appList.innerHTML = "";
+
+      if (appSnap.empty) {
+        appList.innerHTML = "<p>No applications found.</p>";
+        return;
+      }
+
+      appSnap.forEach((docSnap) => {
+        const data = docSnap.data();
+        const submitted = data.submittedAt
+          ? new Date(data.submittedAt.seconds * 1000).toLocaleString()
+          : "N/A";
+
+        const appCard = document.createElement("div");
+        appCard.className = "application-card";
+        appCard.innerHTML = `
+          <strong>Name:</strong> ${data.name}<br/>
+          <strong>Email:</strong> ${data.email}<br/>
+          <strong>Phone:</strong> ${data.phone}<br/>
+          <strong>Job Applied:</strong> ${data.job}<br/>
+          <strong>Message:</strong> ${data.message || "(none)"}<br/>
+          <small><em>Submitted at: ${submitted}</em></small>
+        `;
+        appList.appendChild(appCard);
+      });
+    }
+
+    window.submitApplication = async function () {
+      const name = document.getElementById("appName").value.trim();
+      const email = document.getElementById("appEmail").value.trim();
+      const phone = document.getElementById("appPhone").value.trim();
+      const job = document.getElementById("appJob").value.trim();
+      const message = document.getElementById("appMessage").value.trim();
+
+      if (!name || !email || !phone || !job) {
+        alert("Please fill in all required fields.");
+        return;
+      }
+
+      try {
+        await addDoc(collection(db, "applications"), {
+          name,
+          email,
+          phone,
+          job,
+          message,
+          submittedAt: new Date(),
+        });
+        alert("Application submitted successfully!");
+        document.getElementById("applicationForm").reset();
+      } catch (e) {
+        alert("Error submitting application: " + e.message);
+      }
+    };
+  </script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f8fc;
+      padding: 20px;
+    }
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 700px;
+      margin: 20px auto;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    input,
+    textarea {
+      width: 100%;
+      margin: 8px 0;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    .job-card {
+      background: #eef;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .job-card input {
+      flex: 1 1 45%;
+      min-width: 120px;
+    }
+    .application-card {
+      background: #def;
+      padding: 10px;
+      margin-bottom: 12px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+    h2 {
+      margin-top: 0;
+    }
+    #applicationList {
+      max-height: 300px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      padding: 10px;
+      border-radius: 6px;
+      background: #fafafa;
+    }
+  </style>
 </head>
 <body>
-  <header>Ashwani Consultancy</header>
-  <nav>
-    <a href="index.html">Home</a>
-    <a href="admin.html">Post Job</a>
-  </nav>
-  <div class="hero">
-    <h1>Your Career Partner for Life</h1>
-    <p>Explore job listings and apply for your dream career!</p>
+
+  <!-- Admin Login -->
+  <div class="card" id="loginSection">
+    <h2>Admin Login</h2>
+    <input type="password" id="adminPassword" placeholder="Enter Admin Password" />
+    <button onclick="login()">Login</button>
   </div>
-  <section class="job-section" id="job-listings">
-    <p>Loading jobs...</p>
-  </section>
-  <footer>© 2025 Ashwani Consultancy</footer>
-  <script src="script.js"></script>
+
+  <!-- Admin Job Management + Applications -->
+  <div class="card" id="mainSection" style="display:none;">
+    <h2>Manage Jobs</h2>
+    <div id="jobList"></div>
+
+    <h2>Job Applications</h2>
+    <div id="applicationList">
+      <p>Loading applications...</p>
+    </div>
+  </div>
+
+  <!-- Job Seeker Application Form -->
+  <div class="card">
+    <h2>Job Seeker Application</h2>
+    <form id="applicationForm" onsubmit="event.preventDefault(); submitApplication();">
+      <input type="text" id="appName" placeholder="Your Name" required />
+      <input type="email" id="appEmail" placeholder="Your Email" required />
+      <input type="text" id="appPhone" placeholder="Phone Number" required />
+      <input type="text" id="appJob" placeholder="Job Title You're Applying For" required />
+      <textarea
+        id="appMessage"
+        placeholder="Message or Cover Letter (optional)"
+        rows="4"
+      ></textarea>
+      <button type="submit">Submit Application</button>
+    </form>
+  </div>
 </body>
 </html>
