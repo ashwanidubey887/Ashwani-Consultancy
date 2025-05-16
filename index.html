@@ -36,10 +36,10 @@
       const pw = document.getElementById("adminPassword").value;
       if (pw !== "Ashwani@123") {
         document.getElementById("loginError").textContent = "Incorrect password.";
-        
         return;
       }
       isAuthenticated = true;
+      document.getElementById("loginError").textContent = "";
       document.getElementById("loginSection").style.display = "none";
       document.getElementById("mainSection").style.display = "block";
       await loadJobs();
