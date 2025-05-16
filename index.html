@@ -35,7 +35,8 @@
     window.login = async function () {
       const pw = document.getElementById("adminPassword").value;
       if (pw !== "admin123") {
-        alert("Incorrect password.");
+        document.getElementById("loginError").textContent = "Incorrect password.";
+        
         return;
       }
       isAuthenticated = true;
@@ -216,6 +217,7 @@
   <div class="card" id="loginSection">
     <h2>Admin Login</h2>
     <input type="password" id="adminPassword" placeholder="Enter Admin Password" />
+    <p id="loginError" style="color:red;"></p>
     <button onclick="login()">Login</button>
   </div>
 
